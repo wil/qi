@@ -24,7 +24,7 @@ Run 'qi <command> --help' for more information on a command.
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = argv or sys.argv[1:]
+    args = argv if argv is not None else sys.argv[1:]
 
     if not args:
         from qi.commands.run import run as run_cmd

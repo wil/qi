@@ -1,7 +1,5 @@
 """Run subcommand: process a file."""
 
-from __future__ import annotations
-
 import argparse
 
 

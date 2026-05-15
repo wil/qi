@@ -1,8 +1,8 @@
 """CLI entry point for Qi."""
 
-from __future__ import annotations
 
 import importlib
+import logging
 import sys
 
 from qi import __version__
@@ -22,6 +22,7 @@ Commands:
 Run 'qi <command> --help' for more information on a command.
 """
 
+logger = logging.getLogger(__name__)
 
 def main(argv: list[str] | None = None) -> int:
     args = argv if argv is not None else sys.argv[1:]
@@ -38,6 +39,8 @@ def main(argv: list[str] | None = None) -> int:
     if args[0] == "--version":
         print(f"qi {__version__}")
         return 0
+
+    logging.basicConfig(level=logging.INFO)
 
     if args[0] in SUBCOMMANDS:
         mod = importlib.import_module(SUBCOMMANDS[args[0]])

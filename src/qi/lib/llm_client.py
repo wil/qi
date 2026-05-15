@@ -1,6 +1,9 @@
+import logging
 from typing import Any
 
 import requests
+
+logger = logging.getLogger(__name__)
 
 
 class LLMClient:
@@ -11,7 +14,7 @@ class LLMClient:
         self.model = model
         self.api_key = api_key
 
-    def chat(self, messages: list[dict[str, object]], **kwargs: object) -> str:
+    def chat(self, messages: list[dict[str, str]], **kwargs: object) -> str:
         headers: dict[str, str] = {"Content-Type": "application/json"}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
@@ -26,6 +29,7 @@ class LLMClient:
         )
         resp.raise_for_status()
         data: Any = resp.json()
+        logger.info(f"<<< Response:\n{data}")
         content = data["choices"][0]["message"]["content"]
         assert isinstance(content, str)
         return content

@@ -1,10 +1,10 @@
 """Run subcommand: process files with the LLM."""
 
 import argparse
-import json
 import logging
 
 from qi.lib.config import load
+from qi.lib.handler import handle_response
 from qi.lib.llm_client import LLMClient
 from qi.prompts.master import SYSTEM_PROMPT
 
@@ -13,22 +13,6 @@ FILE_READ_HEAD_CHARS = 1024
 
 
 logger = logging.getLogger(__name__)
-
-
-def handle_response(content: str) -> int:
-    if content.startswith("```jsonl"):
-        content = content.removeprefix("```jsonl").removesuffix("```").strip()
-
-    try:
-        for i, line in enumerate(content.splitlines()):
-            data = json.loads(line)
-            print(data)
-    except json.JSONDecodeError as e:
-        logger.error(f"Unable to parse line {i}: {e}")
-        logger.error(f"Full response:\n{content}")
-        return 1
-
-    return 0
 
 
 def _build_messages(prompt_message: str, file_paths: list[str]) -> list[dict[str, str]]:

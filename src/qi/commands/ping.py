@@ -20,7 +20,7 @@ def run(argv: list[str]) -> int:
 
     settings = load()
 
-    client = LLMClient(
+    client = LLMClient.create(
         base_url=settings.base_url,
         model=settings.model,
         api_key=settings.api_key,

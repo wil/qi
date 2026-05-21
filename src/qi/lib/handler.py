@@ -24,20 +24,19 @@ DEFAULT_TOOLS: ToolMap = {
     "ReadFile": _read_file,
 }
 
+_TOOL_PARAMS: dict[str, tuple[str, ...]] = {
+    "ReadFile": ("path", "start", "end"),
+}
 
-def _parse_json_objects(content: str) -> list[dict[str, Any]]:
-    decoder = json.JSONDecoder()
-    objects: list[dict[str, Any]] = []
-    i = 0
-    while i < len(content):
-        while i < len(content) and content[i] in ' \t\n\r':
-            i += 1
-        if i >= len(content):
-            break
-        obj, pos = decoder.raw_decode(content, i)
-        objects.append(obj)
-        i = pos
-    return objects
+
+def _normalize_args(tool_name: str, args: Any) -> dict[str, Any]:
+    if isinstance(args, dict):
+        return args
+    if isinstance(args, list):
+        params = _TOOL_PARAMS.get(tool_name)
+        if params:
+            return dict(zip(params, args))
+    return {}
 
 
 def _strip_code_fence(content: str) -> str:
@@ -49,38 +48,53 @@ def _strip_code_fence(content: str) -> str:
 def handle_response(
     content: str,
     tool_map: ToolMap | None = None,
-) -> int:
+) -> tuple[list[dict[str, str]] | None, bool]:
     if tool_map is None:
         tool_map = DEFAULT_TOOLS
 
     content = _strip_code_fence(content)
-
+    reply_messages: list[dict[str, str]] = []
+    done = False
     try:
-        for data in _parse_json_objects(content):
-            match data.get("type"):
+        body = json.loads(content)
+        if isinstance(body, dict):
+            items = body.get("messages", [body])
+        else:
+            items = body if isinstance(body, list) else [body]
+        for item in items:
+            match item.get("type"):
 
                 case "thought":
-                    logger.debug("Thought: %s", data.get("content", ""))
+                    logger.info("Thought: %s", item.get("content", ""))
 
                 case "reply":
-                    print(data["content"])
+                    print(item["content"])
+
+                case "ask":
+                    answer = input("> ")
+                    reply_messages.append({"role": "user", "content": answer})
+
+                case "conclusion":
+                    done = True
 
                 case "call":
-                    tool_name = data.get("tool", "")
-                    args = data.get("args", {})
+                    tool_name = item.get("tool", "")
+                    args = _normalize_args(tool_name, item.get("args", {}))
                     tool_fn = tool_map.get(tool_name)
                     if tool_fn is None:
                         logger.error(f"Unknown tool: {tool_name}")
-                        return 1
-                    result = tool_fn(**args)
-                    print(result)
+                        done = True
+                    else:
+                        result = tool_fn(**args)
+                        logger.info(f"Result of tool call:\n{result[:300]}\n=============")
+                        reply_messages.append({"role": "tool", "content": result})
 
                 case _:
-                    print(data)
+                    done = True
+                    logger.warning("Unknown type: %s", item.get("type", "unknown"))
 
     except json.JSONDecodeError as e:
         logger.error(f"Unable to parse JSON: {e}")
         logger.error(f"Full response:\n{content}")
-        return 1
 
-    return 0
+    return reply_messages, done

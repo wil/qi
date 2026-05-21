@@ -40,7 +40,11 @@ def main(argv: list[str] | None = None) -> int:
         print(f"qi {__version__}")
         return 0
 
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(module)s.%(funcName)s:%(lineno)d %(message)s",
+        datefmt="%H:%M:%S",
+    )
 
     if args[0] in SUBCOMMANDS:
         mod = importlib.import_module(SUBCOMMANDS[args[0]])

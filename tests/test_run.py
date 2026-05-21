@@ -4,8 +4,8 @@ from unittest.mock import Mock, mock_open, patch
 
 import pytest
 
-from qi.lib.config import Settings
 from qi.commands.run import run
+from qi.lib.config import Settings
 
 
 def test_files_sent_as_user_messages() -> None:
@@ -15,7 +15,7 @@ def test_files_sent_as_user_messages() -> None:
 
     with (
         patch("qi.commands.run.load") as mock_load,
-        patch("qi.commands.run.LLMClient", return_value=mock_client),
+        patch("qi.commands.run.LLMClient.create", return_value=mock_client),
         patch("builtins.open", mock_open(read_data="file content")),
     ):
         mock_load.return_value = Settings(
@@ -43,11 +43,14 @@ def test_files_sent_as_user_messages() -> None:
 def test_files_sent_as_user_messages_capsys(capsys: pytest.CaptureFixture[str]) -> None:
     """LLM response is printed to stdout."""
     mock_client = Mock()
-    mock_client.chat.return_value = '{"result": "ok"}'
+    mock_client.chat.return_value = (
+        '{"messages": [{"type": "reply", "content": "analysis complete"},'
+        ' {"type": "conclusion", "content": ""}]}'
+    )
 
     with (
         patch("qi.commands.run.load") as mock_load,
-        patch("qi.commands.run.LLMClient", return_value=mock_client),
+        patch("qi.commands.run.LLMClient.create", return_value=mock_client),
         patch("builtins.open", mock_open(read_data="x")),
     ):
         mock_load.return_value = Settings(
@@ -62,7 +65,7 @@ def test_files_sent_as_user_messages_capsys(capsys: pytest.CaptureFixture[str]) 
 
     assert rc == 0
     out, _ = capsys.readouterr()
-    assert out == "{'result': 'ok'}\n"
+    assert out == "analysis complete\n"
 
 
 def test_prompt_adds_instruction_message() -> None:
@@ -72,7 +75,7 @@ def test_prompt_adds_instruction_message() -> None:
 
     with (
         patch("qi.commands.run.load") as mock_load,
-        patch("qi.commands.run.LLMClient", return_value=mock_client),
+        patch("qi.commands.run.LLMClient.create", return_value=mock_client),
         patch("builtins.open", mock_open(read_data="code")),
     ):
         mock_load.return_value = Settings(
@@ -109,7 +112,7 @@ def test_multiple_files() -> None:
 
     with (
         patch("qi.commands.run.load") as mock_load,
-        patch("qi.commands.run.LLMClient", return_value=mock_client),
+        patch("qi.commands.run.LLMClient.create", return_value=mock_client),
         patch("builtins.open", side_effect=handles),
     ):
         mock_load.return_value = Settings(
@@ -133,7 +136,7 @@ def test_missing_file_returns_error() -> None:
     """If a file doesn't exist, return non-zero exit code."""
     with (
         patch("qi.commands.run.load") as mock_load,
-        patch("qi.commands.run.LLMClient"),
+        patch("qi.commands.run.LLMClient.create"),
     ):
         mock_load.return_value = Settings(
             api_key="sk-test",
@@ -155,7 +158,7 @@ def test_llm_error_returns_error() -> None:
 
     with (
         patch("qi.commands.run.load") as mock_load,
-        patch("qi.commands.run.LLMClient", return_value=mock_client),
+        patch("qi.commands.run.LLMClient.create", return_value=mock_client),
         patch("builtins.open", mock_open(read_data="x")),
     ):
         mock_load.return_value = Settings(

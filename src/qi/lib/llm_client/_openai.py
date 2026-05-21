@@ -5,8 +5,10 @@ import requests
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_MODEL = "gpt-4o"
+DEFAULT_BASE_URL = "https://api.openai.com/v1"
 
-class LLMClient:
+class OpenAILLMClient:
     def __init__(
         self, base_url: str, model: str, *, api_key: str | None = None
     ) -> None:

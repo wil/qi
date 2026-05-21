@@ -2,6 +2,7 @@
 
 import argparse
 import logging
+import time
 
 from qi.lib.config import load
 from qi.lib.handler import handle_response
@@ -82,20 +83,33 @@ def run(argv: list[str]) -> int:
 
     logger.info(messages)
 
-    client = LLMClient(
+    client = LLMClient.create(
         base_url=settings.base_url,
         model=settings.model,
         api_key=settings.api_key,
     )
 
-    try:
-        response = client.chat(
-            messages,
-            temperature=settings.temperature,
-            max_tokens=settings.max_tokens,
-        )
-    except Exception as e:
-        logger.error(f"LLM call failed: {e}")
-        return 1
+    while True:
+        logger.info(">>>>>>>>>>>>\n" + "\n".join([str(x) for x in messages]))
+        try:
+            response = client.chat(
+                messages,
+                temperature=settings.temperature,
+                max_tokens=settings.max_tokens,
+            )
+        except Exception as e:
+            logger.error(f"LLM call failed: {e}")
+            return 1
 
-    return handle_response(response)
+        outputs, done = handle_response(response)
+        if done:
+            break
+
+        if outputs:
+            messages.append({"role": "assistant", "content": response})
+            messages.extend(outputs)
+
+        logger.info("Sleeping...")
+        time.sleep(5)
+
+    return 0

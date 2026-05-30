@@ -8,3 +8,12 @@ wheels/
 
 # Virtual environments
 .venv
+
+# OS files
+.DS_Store
+
+# Environment
+.env
+
+# Qi sessions
+.qi/sessions/

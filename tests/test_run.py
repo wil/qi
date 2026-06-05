@@ -141,9 +141,8 @@ def test_multiple_files() -> None:
 
     assert rc == 0
     messages = mock_client.chat.call_args[0][0]
-
-    assert messages[-3]["content"] == "content a"
-    assert messages[-2]["content"] == "content b"
+    assert messages[-2]["content"] == "content a"
+    assert messages[-1]["content"] == "content b"
 
 
 def test_missing_file_returns_error() -> None:

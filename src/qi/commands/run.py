@@ -130,7 +130,8 @@ def run(argv: list[str]) -> int:
         return 1
 
     session = _create_session(_get_session_dir(), settings.model, parsed.prompt, parsed.files, file_messages)
-    print(session.file_path)
+    logger.info(f"Session file: {session.file_path}")
+
     client = LLMClient.create(
         base_url=settings.base_url,
         model=settings.model,
@@ -168,9 +169,12 @@ def run(argv: list[str]) -> int:
             )
 
         outputs, done = handle_response(response.content, response.tool_calls)
-        for tool_res in outputs or []:
-            session.log_tool_result(tool_res[LogKey.CONTENT], tool_res[LogKey.NAME], tool_res[LogKey.TOOL_CALL_ID])
-
+        for res in outputs or []:
+            # logger.info(f"logging output: {res}")
+            if res[LogKey.ROLE] == Role.TOOL:
+                session.log_tool_result(res[LogKey.CONTENT], res[LogKey.NAME], res[LogKey.TOOL_CALL_ID])
+            else:
+                session.log_message(res[LogKey.ROLE], res[LogKey.CONTENT], res[LogKey.NAME], res.get(LogKey.TOOL_CALLS))
         if done:
             break
 

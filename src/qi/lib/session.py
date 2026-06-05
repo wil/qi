@@ -34,7 +34,7 @@ def make_slug(prompt: str) -> str:
     words = [w for w in words if w not in ARTICLES]
     if not words:
         return "session"
-    slug = "_".join(words[:5])
+    slug = "_".join(words[:8])
     return slug
 
 
@@ -55,7 +55,7 @@ class Session:
     def generate_session_id(cls, prompt: str, timestamp: datetime.datetime | None = None) -> str:
         timestamp = timestamp or datetime.datetime.now()
         slug = make_slug(prompt)
-        session_id = f"{timestamp:%Y%m%d%H%M%S}-{uuid.uuid4().hex}-{slug}"
+        session_id = f"{timestamp:%Y%m%dT%H%M%S}-{uuid.uuid4().hex}-{slug}"
         return session_id
 
     @classmethod

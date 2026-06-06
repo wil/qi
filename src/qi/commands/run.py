@@ -159,6 +159,7 @@ def run(argv: list[str]) -> int:
             )
         except Exception as e:
             logger.error(f"LLM call failed: {e}")
+            logger.info(f"[ERR] LLM call failed: {e}", exc_info=True)
             return 1
 
         if response.content or response.tool_calls:

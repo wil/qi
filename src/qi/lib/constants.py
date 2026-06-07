@@ -1,5 +1,5 @@
 from enum import StrEnum
-from typing import Any
+from typing import Any, TypeAlias
 
 
 class Role(StrEnum):
@@ -51,5 +51,4 @@ class MessageType(StrEnum):
     THOUGHT = "thought"
 
 
-# LogRecord: TypeAlias = dict[str, str | dict[str, Any]]
-type LogRecord = dict[str, str | dict[str, Any] | list[Any]]
+LogRecord: TypeAlias = dict[str, str | dict[str, Any] | list[Any]]

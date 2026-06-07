@@ -91,7 +91,8 @@ class Session:
 
     @property
     def messages(self, keys: set[str] | None = None) -> list[LogRecord]:
-        keys = keys or {LogKey.ROLE, LogKey.CONTENT, LogKey.NAME, LogKey.TOOL_CALLS, LogKey.TOOL_CALL_ID}
+        "Filter messages for returning to the LLM for next turn"
+        keys = keys or {LogKey.ROLE, LogKey.CONTENT, LogKey.NAME, LogKey.TOOL_CALLS, LogKey.TOOL_CALL_ID, LogKey.EXTRA}
         def filter_for_keys(d: dict[str, Any]) -> dict[str, Any]:
             return {k: v for k, v in d.items() if k in keys}
 
@@ -140,6 +141,7 @@ class Session:
             tool_call_id: str | None = None,
             tool_name: str | None = None,
             meta: dict[str, Any] | None = None,
+            extra: dict[str, Any] | None = None,
             write: bool = True,
     ) -> None:
         """Logs a record with a given role and content/tool name."""
@@ -154,6 +156,7 @@ class Session:
             (LogKey.TOOL_CALLS.value, tool_calls),
             (LogKey.META.value, meta),
             (LogKey.NAME.value, tool_name),
+            (LogKey.EXTRA.value, extra),
         ]:
             if v is not None:
                 record[k] = v
@@ -170,21 +173,39 @@ class Session:
             meta=meta,
         )
 
-    def log_message(self, role: str, content: str | None = None, tool_calls: list[dict[str, Any]] | None = None) -> None:
+    def log_message(
+            self,
+            role: str,
+            content: str | None = None,
+            tool_calls: list[dict[str, Any]] | None = None,
+            meta: dict[str, Any] | None = None,
+            extra: dict[str, Any] | None = None,
+    ) -> None:
         return self.log_record(
             type_=RecordType.MESSAGE.value,
             role=role,
             content=content,
             tool_calls=tool_calls,
+            meta=meta,
+            extra=extra,
         )
 
-    def log_tool_result(self, content: str, tool_name: str, tool_call_id: str = "") -> None:
+    def log_tool_result(
+            self,
+            content: str,
+            tool_name: str,
+            tool_call_id: str = "",
+            meta: dict[str, Any] | None = None,
+            extra: dict[str, Any] | None = None,
+    ) -> None:
         return self.log_record(
             type_=RecordType.MESSAGE.value,
             role=Role.TOOL.value,
             content=content,
             tool_name=tool_name,
             tool_call_id=tool_call_id,
+            meta=meta,
+            extra=extra,
         )
 
     def log_start(self, model: str) -> None:

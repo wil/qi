@@ -3,7 +3,7 @@
 import json
 import logging
 import re
-from typing import Any
+from typing import Any, TypeAlias, cast
 
 from rich.console import Console
 from rich.markdown import Markdown
@@ -22,7 +22,7 @@ console = Console()
 
 ToolMap = dict[str, Any]
 FnTool = Any
-
+JSONPayload: TypeAlias = dict[str, Any] | list[dict[str, Any]]
 
 def _truncate(obj: object, max_len: int = 5000) -> str:
     s = str(obj)
@@ -37,16 +37,16 @@ def _strip_code_fence(content: str) -> str:
     return content.strip()
 
 
-def parse_json_best_effort(s: str) -> dict[str, Any] | list[dict[str, Any]]:
+def parse_json_best_effort(s: str) -> JSONPayload:
     try:
-        body = json.loads(s)
+        body = cast(JSONPayload, json.loads(s))
         return body
     except json.JSONDecodeError as e:
         # handle extra trailing content
         if e.msg == "Extra data" and e.pos >= 2:  # expect at least 2 characters in JSON: [] or {}
             logger.warning(f"Trailing data ({len(e.doc) - e.pos} chars) found in LLM response while parsing as JSON: {e.doc[e.pos:e.pos+200]}...")
-            logger.warning(f"Trying to parse the preceeding content")
-            return json.loads(s[:e.pos])
+            logger.warning("Trying to parse the preceeding content")
+            return cast(JSONPayload, json.loads(s[:e.pos]))
         else:
             raise  # can't handle, re-raise
 
@@ -100,12 +100,12 @@ def handle_response(
                     logger.warning("Unknown type: %s", item.get(MessageKey.TYPE, "unknown"))
 
     except json.JSONDecodeError as e:
-        logger.warning(f"Unable to parse LLM response as JSON. Correcting it")
+        logger.warning("Unable to parse LLM response as JSON. Correcting it")
         logger.info(f"[ERR] LLM response is not valid JSON: {e}\n  Full response:\n{content}", exc_info=True)
         error = True
         # remind the model to give us structured output
         reply_messages.append({
-            LogKey.ROLE.value: Role.SYSTEM.value,
+            LogKey.ROLE.value: Role.USER.value,  # should be system, but we avoid interspersing system prompt for Google (probably Anthopic too)
             LogKey.CONTENT.value: (
                 "Could not parse the content of the `messages` key as JSON (after removing any leading / trailing code fences) "
                 "in your last response. Stick to the stipulated format and do not make up your own"

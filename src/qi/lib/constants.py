@@ -19,6 +19,7 @@ class LogKey(StrEnum):
     API = "api"  # LLM indicates which tool to call
     ID = "id"
     CONTENT = "content"
+    EXTRA = "extra"  # additional provider-specific parameters
     META = "meta"
     NAME = "name"  # name of function in OpenAI
     PARAMETERS = "parameters"

@@ -165,8 +165,9 @@ def run(argv: list[str]) -> int:
         if response.content or response.tool_calls:
             session.log_message(
                 Role.ASSISTANT.value,
-                response.content or "",
+                response.content or None,
                 tool_calls=[tc.as_dict() for tc in response.tool_calls],
+                extra=response.extra,
             )
 
         outputs, done = handle_response(response.content, response.tool_calls)

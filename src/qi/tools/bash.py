@@ -49,10 +49,16 @@ class BashTool:
             timeout_msg = f"Command timed out after {params.timeout}s"
             return json.dumps({"exit_code": -1, "stdout": out, "stderr": f"{err}\n{timeout_msg}"})
 
-        return json.dumps(
-            {
-                "exit_code": result.returncode,
-                "stdout": result.stdout,
-                "stderr": result.stderr,
-            }
-        )
+        output = [
+            f"Exit code: {result.returncode}",
+        ]
+        output.append(f"Program exited with {result.returncode}.")
+        if result.stderr:
+            output.append("Stderr is enclosed below in `<stderr>` tags:")
+            output.append(f"<stderr>\n{result.stderr.replace('<stderr>', '&lt;stderr&gt;').strip()}\n<stderr>")
+        if result.stdout:
+            output.append("Stdout is enclosed below in `<stdout>` tags:")
+            output.append(f"<stdout>\n{result.stdout.replace('<stdout>', '&lt;stdout&gt;').strip()}<stdout>")
+        else:
+            output.append("There was no output.")
+        return '\n'.join(output)

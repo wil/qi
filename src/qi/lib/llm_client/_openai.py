@@ -63,8 +63,7 @@ class OpenAILLMClient:
         url = f"{self.base_url}/chat/completions"
 
         logger.info("[INF] >>>>>>>>>>>> Request: POST %s\n%s", url, body)
-        print("Sending POST..........................................................................")
-        print_request(body)
+
 
         resp = requests.post(url, headers=headers, json=body)
         if not resp.ok:
@@ -81,8 +80,7 @@ class OpenAILLMClient:
             logger.info(f"[ERR] Error decoding API response: {e}\nRaw content:\n{resp.text}")
             raise
 
-        print("Received response..........................................................................")
-        print_response(data)
+
 
         content = choice.get("content", "")
         raw_calls: list[Any] = choice.get("tool_calls") or []

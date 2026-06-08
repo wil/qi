@@ -1,5 +1,4 @@
 import logging
-import re
 from typing import Any, cast
 
 import requests
@@ -141,7 +140,7 @@ class GoogleLLMClient:
         content: str | None = None
         tool_calls: list[ToolCall] = []
         extra: dict[str, Any] = {}
-        assert len(parts) == 1  # TODO
+
         for part in parts:
             extra = make_dict_optional_keys({'thoughtSignature': part.get('thoughtSignature')})
             if "text" in part:
